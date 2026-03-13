@@ -4,26 +4,27 @@ from flask import Flask, request, jsonify, render_template_string
 app = Flask(__name__)
 
 def hype_hash(input_string):
-    massiv = []
-    result = []
-    chet = 0
-    nechet = 0
+    if not input_string:
+        raise ValueError("empty string")
+    
     dick = 't54iLckQl21IYmxbqKoXsfuC0nepazR6BVDEHTOSAjNwW7yPMg9vJ83GrFUdZh'
-    for char in input_string:
-        temp = ord(char) % len(input_string)
-        massiv.append(temp)
-    for i in range(len(massiv) - 1):
-        if i % 2 == 0:
-            chet += massiv[i]
-        else:
-            nechet += massiv[i]
-    temp = nechet + 1
-    nechet = nechet % (chet + 1)
-    chet = chet % temp
-    value = chet + nechet
+    
+    massiv = [(ord(char) * (i + 1)) % 256 for i, char in enumerate(input_string)]
+    
+    for _ in range(4):
+        for i in range(len(massiv)):
+            massiv[i] = (massiv[i] ^ massiv[i - 1] ^ (i * 31)) % 256
+
+    state = 0
+    for i, v in enumerate(massiv):
+        state = (state * 1000003 ^ v * (i + 1)) & 0xFFFFFFFF  # простое число, маска 32 бита
+
+    result = []
     for i in range(31):
-        idx = (massiv[i % len(input_string)] + value + i * 10007) % len(dick)
+        idx = (massiv[i % len(massiv)] ^ (state >> (i % 32)) ^ i * 10007) % len(dick)
         result.append(dick[idx])
+        state = (state * 6364136223846793005 + 1) & 0xFFFFFFFF  # LCG для изменения state
+
     return "".join(result)
 
 HTML = """<!DOCTYPE html>
