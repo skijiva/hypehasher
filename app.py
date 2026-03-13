@@ -3,167 +3,258 @@ from flask import Flask, request, jsonify, render_template_string
 
 app = Flask(__name__)
 
-
 def hype_hash(input_string):
-    if not input_string:
-        return ""
-
     massiv = []
     result = []
     chet = 0
     nechet = 0
     dick = 't54iLckQl21IYmxbqKoXsfuC0nepazR6BVDEHTOSAjNwW7yPMg9vJ83GrFUdZh'
-
     for char in input_string:
         temp = ord(char) % len(input_string)
         massiv.append(temp)
-
     for i in range(len(massiv) - 1):
         if i % 2 == 0:
             chet += massiv[i]
         else:
             nechet += massiv[i]
-
     temp = nechet + 1
     nechet = nechet % (chet + 1)
     chet = chet % temp
     value = chet + nechet
-
     for i in range(31):
-        idx = (massiv[i % (len(input_string))] + value + i * 10007) % len(dick)
+        idx = (massiv[i % len(input_string)] + value + i * 10007) % len(dick)
         result.append(dick[idx])
-
     return "".join(result)
 
-
-HTML_TEMPLATE = """
-<!DOCTYPE html>
+HTML = """<!DOCTYPE html>
 <html lang="ru">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>HYPE HASHER</title>
-    <style>
-        body {
-            font-family: 'Courier New', Courier, monospace;
-            background-color: #121212;
-            color: #ffffff;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            height: 100vh;
-            margin: 0;
-        }
-        .container {
-            width: 100%;
-            max-width: 600px;
-            padding: 20px;
-            text-align: center;
-        }
-        h1 {
-            font-weight: normal;
-            letter-spacing: 4px;
-            margin-bottom: 40px;
-            text-transform: uppercase;
-            border-bottom: 2px solid #ffffff;
-            padding-bottom: 10px;
-            display: inline-block;
-        }
-        input[type="text"] {
-            width: 100%;
-            padding: 15px;
-            font-size: 18px;
-            background-color: #000000;
-            color: #ffffff;
-            border: 2px solid #555555;
-            outline: none;
-            box-sizing: border-box;
-            transition: border-color 0.3s ease;
-            text-align: center;
-        }
-        input[type="text"]:focus {
-            border-color: #ffffff;
-        }
-        .result-box {
-            margin-top: 30px;
-            min-height: 25px;
-            padding: 20px;
-            border: 1px dashed #555555;
-            font-size: 24px;
-            word-wrap: break-word;
-            letter-spacing: 2px;
-            color: #ffffff;
-        }
-        .placeholder {
-            color: #555555;
-            font-size: 18px;
-        }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>HYPE HASHER</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Bebas+Neue&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #0a0a0a;
+    --fg: #f0f0f0;
+    --dim: #444;
+    --border: #2a2a2a;
+  }
+
+  html, body {
+    height: 100%;
+    background: var(--bg);
+    color: var(--fg);
+    font-family: 'Space Mono', monospace;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+  }
+
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .container {
+    position: relative;
+    z-index: 1;
+    width: min(620px, 90vw);
+    padding: 0 0 4rem;
+  }
+
+  .title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: clamp(3.5rem, 10vw, 6rem);
+    letter-spacing: 0.05em;
+    line-height: 1;
+    color: var(--fg);
+    position: relative;
+  }
+
+  .title::after {
+    content: '';
+    display: block;
+    height: 1px;
+    background: var(--border);
+    margin-top: 1.4rem;
+    margin-bottom: 2.4rem;
+  }
+
+  .subtitle {
+    font-size: 0.65rem;
+    letter-spacing: 0.3em;
+    text-transform: uppercase;
+    color: var(--dim);
+    position: absolute;
+    top: 0.35em;
+    right: 0;
+    font-family: 'Space Mono', monospace;
+  }
+
+  label {
+    display: block;
+    font-size: 0.6rem;
+    letter-spacing: 0.25em;
+    text-transform: uppercase;
+    color: var(--dim);
+    margin-bottom: 0.75rem;
+  }
+
+  .input-wrap { position: relative; }
+
+  input[type="text"] {
+    width: 100%;
+    background: transparent;
+    border: none;
+    border-bottom: 1px solid var(--border);
+    color: var(--fg);
+    font-family: 'Space Mono', monospace;
+    font-size: 1.15rem;
+    padding: 0.5rem 0;
+    outline: none;
+    transition: border-color 0.2s;
+    caret-color: var(--fg);
+  }
+
+  input[type="text"]::placeholder { color: var(--dim); }
+  input[type="text"]:focus { border-bottom-color: var(--fg); }
+
+  .cursor-line {
+    position: absolute;
+    bottom: 0; left: 0;
+    height: 1px; width: 0;
+    background: var(--fg);
+    transition: width 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  input[type="text"]:focus ~ .cursor-line { width: 100%; }
+
+  .char-count {
+    font-size: 0.6rem;
+    letter-spacing: 0.15em;
+    color: var(--dim);
+    text-align: right;
+    margin-top: 0.5rem;
+  }
+
+  .divider {
+    height: 1px;
+    background: var(--border);
+    margin: 2.5rem 0;
+  }
+
+  .output-label {
+    font-size: 0.6rem;
+    letter-spacing: 0.25em;
+    text-transform: uppercase;
+    color: var(--dim);
+    margin-bottom: 0.75rem;
+  }
+
+  .hash-value {
+    font-size: 1.05rem;
+    letter-spacing: 0.08em;
+    color: var(--fg);
+    min-height: 1.6em;
+    word-break: break-all;
+    transition: opacity 0.15s;
+    position: relative;
+    padding-left: 1.8rem;
+  }
+
+  .hash-value::before {
+    content: '→';
+    position: absolute;
+    left: 0;
+    color: var(--dim);
+    font-size: 0.85rem;
+    top: 0.05em;
+  }
+
+  .hash-value.loading { opacity: 0.3; }
+
+  .empty-state { color: var(--dim); font-size: 0.85rem; }
+</style>
 </head>
 <body>
-    <div class="container">
-        <h1>Hype Hasher</h1>
+<div class="container">
+  <div class="title" style="position:relative;">
+    HYPE HASHER
+    <span class="subtitle">v1.0</span>
+  </div>
 
-        <input type="text" id="userInput" placeholder="Введите строку..." autocomplete="off">
-
-        <div class="result-box" id="hashResult">
-            <span class="placeholder">Результат появится здесь...</span>
-        </div>
+  <div>
+    <label for="inp">Hash your string</label>
+    <div class="input-wrap">
+      <input type="text" id="inp" placeholder="type something..." autocomplete="off" spellcheck="false">
+      <div class="cursor-line"></div>
     </div>
+    <div class="char-count"><span id="count">0</span> symblos</div>
+  </div>
 
-    <script>
-        const inputField = document.getElementById('userInput');
-        const resultBox = document.getElementById('hashResult');
+  <div class="divider"></div>
 
-        inputField.addEventListener('input', async function() {
-            const text = this.value;
+  <div>
+    <div class="output-label">hash</div>
+    <div class="hash-value" id="output">
+      <span class="empty-state">— awaiting</span>
+    </div>
+  </div>
+</div>
 
-            if (text.length === 0) {
-                resultBox.innerHTML = '<span class="placeholder">Результат появится здесь...</span>';
-                return;
-            }
+<script>
+  const inp = document.getElementById('inp');
+  const output = document.getElementById('output');
+  const count = document.getElementById('count');
+  let debounce;
 
-            try {
-                const response = await fetch('/api/hash', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({ text: text })
-                });
+  inp.addEventListener('input', () => {
+    const val = inp.value;
+    count.textContent = val.length;
+    clearTimeout(debounce);
+    output.classList.add('loading');
+    debounce = setTimeout(() => computeHash(val), 80);
+  });
 
-                if (response.ok) {
-                    const data = await response.json();
-                    resultBox.textContent = data.hash; 
-                } else {
-                    resultBox.textContent = 'Ошибка вычисления';
-                }
-            } catch (error) {
-                resultBox.textContent = 'Ошибка соединения с сервером';
-            }
-        });
-    </script>
+  async function computeHash(val) {
+    try {
+      const res = await fetch('/hash', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ input: val })
+      });
+      const data = await res.json();
+      output.textContent = data.result;
+      output.classList.remove('loading');
+    } catch {
+      output.textContent = 'error';
+      output.classList.remove('loading');
+    }
+  }
+</script>
 </body>
-</html>
-"""
-
+</html>"""
 
 @app.route('/')
 def index():
-    return render_template_string(HTML_TEMPLATE)
+    return render_template_string(HTML)
 
-
-@app.route('/api/hash', methods=['POST'])
-def api_hash():
+@app.route('/hash', methods=['POST'])
+def hash_route():
     data = request.get_json()
-    text = data.get('text', '')
+    text = data.get('input', '')
+    if not text:
+        return jsonify({'result': ''})
+    return jsonify({'result': hype_hash(text)})
 
-    hashed_result = hype_hash(text)
-
-    return jsonify({'hash': hashed_result})
-
-
-if __name__ == "__main__":
-    port = int(os.environ.get("PORT", 1337))
-    app.run(host='0.0.0.0', port=port)
+if __name__ == '__main__':
+    app.run(host='0.0.0.0', port=int(os.environ.get('PORT', 1337)))
