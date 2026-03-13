@@ -17,13 +17,13 @@ def hype_hash(input_string):
 
     state = 0
     for i, v in enumerate(massiv):
-        state = (state * 1000003 ^ v * (i + 1)) & 0xFFFFFFFF  # простое число, маска 32 бита
+        state = (state * 1000003 ^ v * (i + 1)) & 0xFFFFFFFF  
 
     result = []
     for i in range(31):
         idx = (massiv[i % len(massiv)] ^ (state >> (i % 32)) ^ i * 10007) % len(dick)
         result.append(dick[idx])
-        state = (state * 6364136223846793005 + 1) & 0xFFFFFFFF  # LCG для изменения state
+        state = (state * 6364136223846793005 + 1) & 0xFFFFFFFF  
 
     return "".join(result)
 
